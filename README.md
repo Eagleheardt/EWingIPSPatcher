@@ -11,7 +11,6 @@ original python 2.0 code was developed by Xezlec (2017) as ips.py
 
 I used that code and packaged it in an easy to use front end (I hope)
 
-This is hereby released into the public domain
 please credit our work, if you use it
 
 KNOWN ISSUES:
