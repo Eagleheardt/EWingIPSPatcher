@@ -5,8 +5,6 @@ This is still in development!!
 
 graphical front end developed by Eagleheardt (2017)
 
-in the name of all that is holy, use TABS, please!!
-
 original python 2.0 code was developed by Xezlec (2017) as ips.py
 
 I used that code and packaged it in an easy to use front end (I hope)
