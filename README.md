@@ -11,4 +11,5 @@ please credit our work, if you use it
 
 KNOWN ISSUES:
 PIL may have to be purged from your library and re-added
+
 Must have the Icon in the same folder as the .py script
