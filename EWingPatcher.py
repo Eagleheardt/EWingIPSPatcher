@@ -3,8 +3,6 @@
 # graphical front end developed by Eagleheardt (2017)
 # see also https://github.com/Eagleheardt
 
-# in the name of all that is holy, use TABS, please!!
-
 # original python 2.0 code was developed by Xezlec (2017) as ips.py
 
 # I used that code and packaged it in an easy to use front end (I hope)
@@ -18,9 +16,6 @@ from tkinter.ttk import *
 from tkinter import filedialog
 from PIL import Image
 from PIL import ImageTk
-
-import struct
-import sys
 
 root=Tk() # gui window is called root
 root.title("E-Wing IPS Patcher") # set the title of the window
@@ -45,59 +40,34 @@ iconImg = Image.open("Icon.bmp")
 iconPhoto = ImageTk.PhotoImage(iconImg)
 root.tk.call('wm', 'iconphoto', root._w, iconPhoto)
 
-# because life is too hard without it.
-class PatchEOFError( Exception ):
-	def __init__( self, extra_bytes ):
-		self.extra_bytes = extra_bytes
+# reads records of IPS file
+def readRecord(patchFile):
+	# 5 byte header
+	# First 3 bytes are the offset in the ROM file 
+	# Where the information will be inserted
 
-# definition of the IPS file format.
-rec_hdr = struct.Struct( '>BHH' ) # 3-byte offset, 2-byte length
-rle_rec = struct.Struct( '>Hc' )  # 2-byte length, 1-byte fill value
-trunc_rec = struct.Struct( '>BH' )  # 3-byte truncation length
-# These are used to handle C type structures
-# > denotes big-endian 
-# B is an unsigned char
-# H is an unsigned short
-# c is a regular char
+	# Second 2 bytes are the 'length' of the following data
+	offset = int.from_bytes(patchFile.read(3),byteorder='big')
+	loadLength = int.from_bytes(patchFile.read(2),byteorder='big')
 
-def field_read( patch, field, is_first=False ):
-	read_bytes = patch.read( field.size )
-
-	if is_first and read_bytes[0:3] == b'EOF':
-		raise PatchEOFError( read_bytes[3:] )
-	if len( read_bytes ) < field.size:
-		#infoWin = Toplevel()
-		#infoWin.title("CrItIcAl ErRoR")
-		#infoMsg = Message(infoWin,text="Patch file ended unexpectedly.  Maybe patch is corrupt?",width=300).pack(padx=10,pady=5)
-		#infoBtn = Button(infoWin, text="Close",command=infoWin.destroy).pack(padx=10,pady=10)
-		# Personal perferance: I don't mind creating and destroying these widgets
-		# Someone could branch this and optimize it
-		# I've never been accused of 'optimizing' my code... :(
-		return
-
-	return field.unpack( read_bytes )
-
-def rec_read( patch ):
-	offset_hi, offset_lo, length = field_read( patch, rec_hdr, True )
-	offset = (offset_hi << 16) | offset_lo
-
-	if length == 0:
-		length, fill = field_read( patch, rle_rec )
-		replacement = fill * length
+	# If the loadLength is 0, then the next record is an 'RLE' style record
+	# RLE records just output a repeated single character
+	if loadLength == 0:
+		RLESize = int.from_bytes(patchFile.read(2),byteorder='big')
+		RLEChar = patchFile.read(1)
+		replacement = RLEChar * RLESize
+		# The output is the RLEChar times the RLESize
+		return offset, replacement
 	else:
-		replacement = patch.read( length )
-	if len( replacement ) < length:
-		infoWin = Toplevel()
-		infoWin.title("CrItIcAl ErRoR")
-		infoMsg = Message(infoWin,text="Patch file ended unexpectedly.  Maybe patch is corrupt?",width=300).pack(padx=10,pady=5)
-		infoBtn = Button(infoWin, text="Close",command=infoWin.destroy).pack(padx=10,pady=10)
-		return
-
-	return offset, replacement
+		# If the length is more than 0, the replacement data output
+		# will be the next loadLength amount of bytes
+		replacement = patchFile.read(loadLength)
+		return offset, replacement
 
 # Button execution methods
 
 def btnROMClick():
+	# only does basic file checking for ROM
 	checkROMPath = filedialog.askopenfilename() # brings up a filedialog to select the ROM
 	try:
 		checkROMIO = open(checkROMPath,'r+b')
@@ -116,8 +86,10 @@ def btnROMClick():
 	return
 
 def btnIPSClick():
+	# only does basic file checking for ROM
 	checkIPSPath = filedialog.askopenfilename() # brings up a filedialog to select the ROM
 	try:
+		# AL7L7L7 IPS patches apparently start with the word "PATCH"
 		checkIPSIO = open(checkIPSPath,'rb')
 		if checkIPSIO.read(5) != b'PATCH':
 			raise ValueError('IPS not supported')
@@ -140,82 +112,43 @@ def btnApplyClick():
 	# Open our files
 	finalROM = open(ROMPath.get(),'r+b')
 	finalIPS = open(IPSPath.get(),'rb')
+	finalIPS.seek(5)
+	# Moves the pointer 5 bytes, past the "PATCH" word
 
 	# Do the patching!
+	records = 0
+	dataWritten = 0
+	while True:
+		offset,replacement = readRecord( finalIPS )
+		print("Data to be written {}".format(replacement))
+		if offset == b'EOF':
+			break
+
+		records += 1
+		dataWritten += len( replacement )
+
+		finalROM.seek( offset )
+		finalROM.write( replacement )
+
+	truncateLength = int.from_bytes(finalIPS.read(3),byteorder='big')
+	if truncateLength != 0:
+		finalROM.truncate(truncateLength)
 	
-	num_recs = 0
-	num_bytes = 0
-
-	try:
-		#offset,replacement = rec_read( finalIPS )
-		while not False:
-			offset,replacement = rec_read( finalIPS )
-
-			try:
-				finalROM.seek( offset )
-			except:
-				#sys.stderr.write( "ERROR: Failed to seek to position %u in ROM file.\n" %offset )
-				#return
-				raise PatchEOFError('EOF')
-
-			try:
-				finalROM.write( replacement )
-			except:
-				raise PatchEOFError('EOF')
-				#return
-				#sys.stderr.write( 'ERROR: Failed to write %u bytes to ROM file.\n' %len( replacement ) )
-
-			num_recs += 1
-			num_bytes += len( replacement )
-	except PatchEOFError as e:
-		infoWin = Toplevel()
-		infoWin.title("Attention!")
-		infoMsg = Message(infoWin,text="Patch Applied!",width=300).pack(padx=10,pady=5)
-		infoBtn = Button(infoWin, text="Close",command=infoWin.destroy).pack(padx=10,pady=10)
-		#sys.stderr.write( 'Patch applied.  Made %u changes for a total of %u bytes changed.\n' %
-			#(num_recs, num_bytes) )
-
-		if len( e.extra_bytes ) != 0:
-		# if there are any bytes after the EOF marker, they better be a
-		# truncation indicator and nothing else.  read 1 past the end, just
-		# to verify.
-			extra_bytes = str(e.extra_bytes) + str(finalIPS.read( 2 ))
-
-			if len( extra_bytes ) != trunc_rec.size:
-				infoWin = Toplevel()
-				infoWin.title("CrItIcAl ErRoR")
-				infoMsg = Message(infoWin,text="Everything is horrible!",width=300).pack(padx=10,pady=5)
-				infoBtn = Button(infoWin, text="Close",command=infoWin.destroy).pack(padx=10,pady=10)
-				return
-
-			trunc_len_hi, trunc_len_lo = trunc_rec.unpack( extra_bytes )
-			trunc_len = (trunc_len_hi << 16) | trunc_len_lo
-
-			try:
-				finalROM.truncate( trunc_len )
-			except:
-				#sys.stderr.write( "ERROR: Failed to truncate ROM file.  Might be OK anyway though.\n" )
-				return
-
-			#sys.stderr.write( 'Also truncated the ROM to %u bytes as instructed.\n' %trunc_len )
+	print("Records changed: {}. Amount changed: {}".format(records,dataWritten))
 	
-	# Close everything
 	finalROM.close()
 	finalIPS.close()
 
-	# Kappa?
-	infoWin = Toplevel()
-	infoWin.title("CrItIcAl ErRoR")
-	infoMsg = Message(infoWin,text="Kappa!",width=300).pack(padx=10,pady=5)
-	infoBtn = Button(infoWin, text="Close",command=infoWin.destroy).pack(padx=10,pady=10)
-	return
+	print("The number of records changed: {}\n\nThe size of all records changed: {}\n\n".format(num_recs,num_bytes))
 
-# Should combine the ROM and IPS
-# magic happens here
+	return
 
 def btnAbtClick():
+	infoWin = Toplevel()
+	infoWin.title("Attention!")
+	infoMsg = Message(infoWin,text="This utility was created by Eagleheardt.",width=300).pack(padx=10,pady=5)
+	infoBtn = Button(infoWin, text="Close",command=infoWin.destroy).pack(padx=10,pady=10)
 	return
-	# todo Brings up a toplevel widget that will tell people about me
 
 # Button declaration and placement
 
@@ -234,3 +167,10 @@ btnApply = Button(root,text="Apply Patch",command=btnApplyClick).grid(row=3,colu
 btnAbt = Button(root,text="About",command=btnAbtClick).grid(row=4,column=0,columnspan=2,padx=10,pady=10,sticky=E+W)
 
 root.mainloop() # this starts the GUI
+
+# resources:
+# https://zerosoft.zophar.net/ips.php
+# http://www.smwiki.net/wiki/IPS_file_format
+# http://justsolve.archiveteam.org/wiki/IPS_(binary_patch_format)
+# Accessed 4/30/2017 - 11am CST
+
