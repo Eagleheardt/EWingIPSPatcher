@@ -47,7 +47,11 @@ def readRecord(patchFile):
 	# Where the information will be inserted
 
 	# Second 2 bytes are the 'length' of the following data
-	offset = int.from_bytes(patchFile.read(3),byteorder='big')
+	first3 = patchFile.read(3)
+	# if the first 3 bytes say 'EOF' we've reached the end of the file
+	if first3 == b'EOF':
+		raise ValueError('END OF FILE')
+	offset = int.from_bytes(first3,byteorder='big')
 	loadLength = int.from_bytes(patchFile.read(2),byteorder='big')
 
 	# If the loadLength is 0, then the next record is an 'RLE' style record
@@ -68,6 +72,7 @@ def readRecord(patchFile):
 
 def btnROMClick():
 	# only does basic file checking for ROM
+
 	checkROMPath = filedialog.askopenfilename() # brings up a filedialog to select the ROM
 	try:
 		checkROMIO = open(checkROMPath,'r+b')
@@ -118,35 +123,56 @@ def btnApplyClick():
 	# Do the patching!
 	records = 0
 	dataWritten = 0
-	while True:
-		offset,replacement = readRecord( finalIPS )
-		print("Data to be written {}".format(replacement))
-		if offset == b'EOF':
-			break
+	try:
+		while True:
+			offset,replacement = readRecord( finalIPS )
+			# this will throw a value error at the end of file marker, kicking us out of the loop
 
-		records += 1
-		dataWritten += len( replacement )
+			records += 1
+			dataWritten += len( replacement )	
+			# each loop increases the number of writes
+			# and adds the amount of replacement each time
 
-		finalROM.seek( offset )
-		finalROM.write( replacement )
+			finalROM.seek( offset )	
+			# moves file pointer to the offset
+			finalROM.write( replacement )
+			# writes the replacement data to the offset location
+	except:
+		pass
+		# when the exception occurs, basically ignore it, move on
 
-	truncateLength = int.from_bytes(finalIPS.read(3),byteorder='big')
-	if truncateLength != 0:
-		finalROM.truncate(truncateLength)
+	truncateOffset = finalIPS.read(3)
+	# checks 3 bytes past the EOF marker for a truncation length
+	if len(truncateOffset) != 0:
+		finalROM.truncate(int.from_bytes(Offset,byteorder='big'))
+		# if it exists, truncates the file to that size
+
+	# info window with changes made
+	infoWin = Toplevel()
+	infoWin.title("Attention!")
+	infoMsg = Message(infoWin,text="Records changed: {}. Amount changed: {}".format(records,dataWritten),width=300).pack(padx=10,pady=5)
+	infoBtn = Button(infoWin, text="Close",command=infoWin.destroy).pack(padx=10,pady=10)
 	
-	print("Records changed: {}. Amount changed: {}".format(records,dataWritten))
-	
+	# close files
 	finalROM.close()
 	finalIPS.close()
+	
+	# Reset all variables/Labels
+	ROMinf.set("No ROM Selected")
+	ROMerr.set("No ROM Info")
 
-	print("The number of records changed: {}\n\nThe size of all records changed: {}\n\n".format(num_recs,num_bytes))
+	IPSinf.set("No IPS Selected")
+	IPSerr.set("No IPS Info")
+
+	ROMPath.set("")
+	IPSPath.set("")
 
 	return
 
 def btnAbtClick():
 	infoWin = Toplevel()
 	infoWin.title("Attention!")
-	infoMsg = Message(infoWin,text="This utility was created by Eagleheardt.",width=300).pack(padx=10,pady=5)
+	infoMsg = Message(infoWin,text="This utility was created by Eagleheardt.\nInspired by Xezlec's original utility.\n\nThe comments in the code detail what it does\nas well as the specification of the IPS file.",width=300).pack(padx=10,pady=5)
 	infoBtn = Button(infoWin, text="Close",command=infoWin.destroy).pack(padx=10,pady=10)
 	return
 
