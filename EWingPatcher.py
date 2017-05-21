@@ -182,4 +182,5 @@ root.mainloop() # this starts the GUI
 # https://zerosoft.zophar.net/ips.php
 # http://www.smwiki.net/wiki/IPS_file_format
 # http://justsolve.archiveteam.org/wiki/IPS_(binary_patch_format)
-# Accessed 4/30/2017 - 11am CST
+# http://effbot.org/tkinterbook/tkinter-index.htm
+# Accessed 5/20/2017
