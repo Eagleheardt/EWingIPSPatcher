@@ -1,11 +1,8 @@
 #!/usr/bin/python3
 
+# Inspired by original python 2.0 code by Xezlec (2017) as ips.py
 # graphical front end developed by Eagleheardt (2017)
 # see also https://github.com/Eagleheardt
-
-# original python 2.0 code was developed by Xezlec (2017) as ips.py
-
-# I used that code and packaged it in an easy to use front end (I hope)
 
 # This is hereby released into the public domain
 # please credit our work, if you use it
@@ -19,6 +16,7 @@ from PIL import ImageTk
 
 root=Tk() # gui window is called root
 root.title("E-Wing IPS Patcher") # set the title of the window
+root.geometry("220x200")
 
 # Global variable declaration
 
@@ -26,14 +24,9 @@ ROMPath = StringVar() # Path of ROM file
 IPSPath = StringVar() # Path of IPS file
 ROMinf = StringVar() # Display of ROM path
 IPSinf = StringVar() # Display of IPS path
-ROMerr = StringVar() # Info about the ROM - good/bad ROM file
-IPSerr = StringVar() # Info about the IPS - good/bad IPS file
 
 ROMinf.set("No ROM Selected")
-ROMerr.set("No ROM Info")
-
 IPSinf.set("No IPS Selected")
-IPSerr.set("No IPS Info")
 
 # this mess sets the tray icon to my E-Wing logo
 iconImg = Image.open("Icon.bmp")
@@ -82,19 +75,17 @@ def btnROMClick():
 		infoMsg = Message(infoWin,text="Unable to read ROM file.",width=300).pack(padx=10,pady=5)
 		infoBtn = Button(infoWin, text="Close",command=infoWin.destroy).pack(padx=10,pady=10)
 		ROMinf.set('Unsupported ROM!')
-		ROMerr.set('Unsupported ROM!')
 		return
 	checkROMIO.close()
 	ROMPath.set(checkROMPath)
-	ROMinf.set(checkROMPath[-15:])
-	ROMerr.set('Good ROM!')
+	ROMinf.set(checkROMPath[-35:])
 	return
 
 def btnIPSClick():
 	# only does basic file checking for ROM
 	checkIPSPath = filedialog.askopenfilename() # brings up a filedialog to select the ROM
 	try:
-		# AL7L7L7 IPS patches apparently start with the word "PATCH"
+		# IPS patches start with the word "PATCH"
 		checkIPSIO = open(checkIPSPath,'rb')
 		if checkIPSIO.read(5) != b'PATCH':
 			raise ValueError('IPS not supported')
@@ -104,13 +95,11 @@ def btnIPSClick():
 		infoMsg = Message(infoWin,text="Unable to read IPS file.",width=300).pack(padx=10,pady=5)
 		infoBtn = Button(infoWin, text="Close",command=infoWin.destroy).pack(padx=10,pady=10)
 		IPSinf.set('Unsupported IPS!')
-		IPSerr.set('Unsupported IPS!')
 		return
 		
 	checkIPSIO.close()
 	IPSPath.set(checkIPSPath)
-	IPSinf.set(checkIPSPath[-15:])
-	IPSerr.set('Good IPS!')
+	IPSinf.set(checkIPSPath[-35:])
 	return
 
 def btnApplyClick():
@@ -158,15 +147,11 @@ def btnApplyClick():
 	finalIPS.close()
 	
 	# Reset all variables/Labels
-	ROMinf.set("No ROM Selected")
-	ROMerr.set("No ROM Info")
-
-	IPSinf.set("No IPS Selected")
-	IPSerr.set("No IPS Info")
-
 	ROMPath.set("")
 	IPSPath.set("")
 
+	ROMinf.set("No ROM Selected")
+	IPSinf.set("No IPS Selected")
 	return
 
 def btnAbtClick():
@@ -174,23 +159,22 @@ def btnAbtClick():
 	infoWin.title("Attention!")
 	infoMsg = Message(infoWin,text="This utility was created by Eagleheardt.\nInspired by Xezlec's original utility.\n\nThe comments in the code detail what it does\nas well as the specification of the IPS file.",width=300).pack(padx=10,pady=5)
 	infoBtn = Button(infoWin, text="Close",command=infoWin.destroy).pack(padx=10,pady=10)
+	#Label(infoWin,image=iconPhoto).pack(padx=10,pady=10)
 	return
 
 # Button declaration and placement
 
 # Buttons and labels for ROM section
-btnROM = Button(root,text="Choose ROM",command=btnROMClick).grid(row=0,column=0,padx=10,pady=10)
-Label(textvariable=ROMinf).grid(row=1,column=0,padx=10,pady=10,sticky=W)
-Label(textvariable=ROMerr).grid(row=2,column=0,padx=10,pady=10,sticky=W)
+btnROM = Button(root,text="Choose ROM",command=btnROMClick).pack(padx=5,pady=5,fill=X)
+Label(textvariable=ROMinf,justify=LEFT).pack(padx=5,pady=5,fill=X)
 
 # Buttons and labels for IPS section
-btnIPS = Button(root,text="Choose Patch",command=btnIPSClick).grid(row=0,column=1,padx=10,pady=10)
-Label(textvariable=IPSinf).grid(row=1,column=1,padx=10,pady=10,sticky=W)
-Label(textvariable=IPSerr).grid(row=2,column=1,padx=10,pady=10,sticky=W)
+btnIPS = Button(root,text="Choose Patch",command=btnIPSClick).pack(padx=5,pady=5,fill=X)
+Label(textvariable=IPSinf,justify=LEFT).pack(padx=5,pady=5,fill=X)
 
 # Apply and About buttons
-btnApply = Button(root,text="Apply Patch",command=btnApplyClick).grid(row=3,column=0,columnspan=2,padx=10,pady=10,sticky=E+W)
-btnAbt = Button(root,text="About",command=btnAbtClick).grid(row=4,column=0,columnspan=2,padx=10,pady=10,sticky=E+W)
+btnApply = Button(root,text="Apply Patch",command=btnApplyClick).pack(padx=5,pady=5,fill=X)
+btnAbt = Button(root,text="About",command=btnAbtClick).pack(padx=5,pady=5,fill=X)
 
 root.mainloop() # this starts the GUI
 
@@ -199,4 +183,3 @@ root.mainloop() # this starts the GUI
 # http://www.smwiki.net/wiki/IPS_file_format
 # http://justsolve.archiveteam.org/wiki/IPS_(binary_patch_format)
 # Accessed 4/30/2017 - 11am CST
-
