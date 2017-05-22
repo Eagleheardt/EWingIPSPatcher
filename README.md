@@ -1,13 +1,11 @@
 # EWingIPSPatcher
-Graphical utility for Linux to patch ROMs
 
+
+Inspired by original python 2.0 code by Xezlec (2017) as ips.py
 graphical front end developed by Eagleheardt (2017)
 
-original python 2.0 code was developed by Xezlec (2017) as ips.py
-
-I used that code and packaged it in an easy to use front end (I hope)
-
-please credit our work, if you use it
+This is hereby released into the public domain
+please credit our work, if you use itGraphical utility for Linux to patch ROMs
 
 KNOWN ISSUES:
 PIL may have to be purged from your library and re-added
