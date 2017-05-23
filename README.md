@@ -1,5 +1,5 @@
 # EWingIPSPatcher
-Graphical utility for Linux tapply IPS patches to ROMs
+Graphical utility for Linux to apply IPS patches to ROMs
 
 Inspired by original python 2.0 code by Xezlec (2017) as ips.py
 
