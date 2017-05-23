@@ -1,5 +1,5 @@
 # EWingIPSPatcher
-
+Graphical utility for Linux tapply IPS patches to ROMs
 
 Inspired by original python 2.0 code by Xezlec (2017) as ips.py
 
@@ -7,7 +7,7 @@ graphical front end developed by Eagleheardt (2017)
 
 This is hereby released into the public domain
 
-please credit our work, if you use itGraphical utility for Linux to patch ROMs
+please credit our work, if you use it
 
 KNOWN ISSUES:
 
