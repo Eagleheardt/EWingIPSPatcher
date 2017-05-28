@@ -16,7 +16,7 @@ from PIL import ImageTk
 
 root=Tk() # gui window is called root
 root.title("E-Wing IPS Patcher") # set the title of the window
-root.geometry("220x200")
+root.geometry("220x230")
 
 # Global variable declaration
 
@@ -61,6 +61,15 @@ def readRecord(patchFile):
 		replacement = patchFile.read(loadLength)
 		return offset, replacement
 
+# Opens a window for information/errors
+
+def openWindow(titleText="Window Title", bodyText="Body Text"):
+	infoWin = Toplevel()
+	infoWin.title(titleText)
+	infoMsg = Message(infoWin,text=bodyText,width=300).pack(padx=10,pady=5)
+	infoBtn = Button(infoWin, text="Close",command=infoWin.destroy).pack(padx=10,pady=10)
+	return
+
 # Button execution methods
 
 def btnROMClick():
@@ -70,10 +79,7 @@ def btnROMClick():
 	try:
 		checkROMIO = open(checkROMPath,'r+b')
 	except:
-		infoWin = Toplevel()
-		infoWin.title("CrItIcAl ErRoR")
-		infoMsg = Message(infoWin,text="Unable to read ROM file.",width=300).pack(padx=10,pady=5)
-		infoBtn = Button(infoWin, text="Close",command=infoWin.destroy).pack(padx=10,pady=10)
+		openWindow("CrItIcAl ErRoR!", "Unable to read ROM file.")
 		ROMinf.set('Unsupported ROM!')
 		return
 	checkROMIO.close()
@@ -82,19 +88,16 @@ def btnROMClick():
 	return
 
 def btnIPSClick():
-	# only does basic file checking for ROM
-	checkIPSPath = filedialog.askopenfilename() # brings up a filedialog to select the ROM
+	# only does basic file checking for IPS
+	checkIPSPath = filedialog.askopenfilename() # brings up a filedialog to select the IPS
 	try:
 		# IPS patches start with the word "PATCH"
 		checkIPSIO = open(checkIPSPath,'rb')
 		if checkIPSIO.read(5) != b'PATCH':
 			raise ValueError('IPS not supported')
 	except:
-		infoWin = Toplevel()
-		infoWin.title("CrItIcAl ErRoR")
-		infoMsg = Message(infoWin,text="Unable to read IPS file.",width=300).pack(padx=10,pady=5)
-		infoBtn = Button(infoWin, text="Close",command=infoWin.destroy).pack(padx=10,pady=10)
-		IPSinf.set('Unsupported IPS!')
+		openWindow("CrItIcAl ErRoR!", "Unable to read IPS file.")
+		IPSinf.set("Unsupported IPS!")
 		return
 		
 	checkIPSIO.close()
@@ -103,11 +106,12 @@ def btnIPSClick():
 	return
 
 def btnApplyClick():
+	
 	# Open our files
 	finalROM = open(ROMPath.get(),'r+b')
 	finalIPS = open(IPSPath.get(),'rb')
 	finalIPS.seek(5)
-	# Moves the pointer 5 bytes, past the "PATCH" word
+	# Moves the pointer 5 bytes, past the word "PATCH"
 
 	# Do the patching!
 	records = 0
@@ -128,7 +132,7 @@ def btnApplyClick():
 			# writes the replacement data to the offset location
 	except:
 		pass
-		# when the exception occurs, basically ignore it, move on
+		# when the exception occurs, ignore it
 
 	truncateOffset = finalIPS.read(3)
 	# checks 3 bytes past the EOF marker for a truncation length
@@ -137,10 +141,7 @@ def btnApplyClick():
 		# if it exists, truncates the file to that size
 
 	# info window with changes made
-	infoWin = Toplevel()
-	infoWin.title("Attention!")
-	infoMsg = Message(infoWin,text="Records changed: {}. Amount changed: {}".format(records,dataWritten),width=300).pack(padx=10,pady=5)
-	infoBtn = Button(infoWin, text="Close",command=infoWin.destroy).pack(padx=10,pady=10)
+	openWindow("Attention!", "Records changed: {}. \nBytes changed: {}".format(records,dataWritten))
 	
 	# close files
 	finalROM.close()
@@ -155,11 +156,7 @@ def btnApplyClick():
 	return
 
 def btnAbtClick():
-	infoWin = Toplevel()
-	infoWin.title("Attention!")
-	infoMsg = Message(infoWin,text="This utility was created by Eagleheardt.\nInspired by Xezlec's original utility.\n\nThe comments in the code detail what it does\nas well as the specification of the IPS file.",width=300).pack(padx=10,pady=5)
-	infoBtn = Button(infoWin, text="Close",command=infoWin.destroy).pack(padx=10,pady=10)
-	#Label(infoWin,image=iconPhoto).pack(padx=10,pady=10)
+	openWindow("Attention!","This utility was created by Eagleheardt.\nInspired by Xezlec's original utility.\n\nThe comments in the code detail what it does\nas well as the specification of the IPS file.")
 	return
 
 # Button declaration and placement
@@ -172,9 +169,10 @@ Label(textvariable=ROMinf,justify=LEFT).pack(padx=5,pady=5,fill=X)
 btnIPS = Button(root,text="Choose Patch",command=btnIPSClick).pack(padx=5,pady=5,fill=X)
 Label(textvariable=IPSinf,justify=LEFT).pack(padx=5,pady=5,fill=X)
 
-# Apply and About buttons
+# Apply, About, Close buttons
 btnApply = Button(root,text="Apply Patch",command=btnApplyClick).pack(padx=5,pady=5,fill=X)
 btnAbt = Button(root,text="About",command=btnAbtClick).pack(padx=5,pady=5,fill=X)
+btnClose = Button(root,text="Close",command=root.destroy).pack(padx=5,pady=5,fill=X)
 
 root.mainloop() # this starts the GUI
 
@@ -182,5 +180,5 @@ root.mainloop() # this starts the GUI
 # https://zerosoft.zophar.net/ips.php
 # http://www.smwiki.net/wiki/IPS_file_format
 # http://justsolve.archiveteam.org/wiki/IPS_(binary_patch_format)
-# http://effbot.org/tkinterbook/tkinter-index.htm
-# Accessed 5/20/2017
+# Accessed 4/30/2017 - 11am CST
+
