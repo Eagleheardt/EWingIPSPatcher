@@ -181,4 +181,3 @@ root.mainloop() # this starts the GUI
 # http://www.smwiki.net/wiki/IPS_file_format
 # http://justsolve.archiveteam.org/wiki/IPS_(binary_patch_format)
 # Accessed 4/30/2017 - 11am CST
-
