@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
-# Inspired by original python 2.0 code by Xezlec (2017) as ips.py
-# graphical front end developed by Eagleheardt (2017)
+# Developed by Eagleheardt (2017)
+# Inspired by Xezlec (2017) ips.py
 # see also https://github.com/Eagleheardt
 
 # This is hereby released into the public domain
