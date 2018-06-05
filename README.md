@@ -2,6 +2,7 @@
 Graphical utility for Linux to apply IPS patches to ROMs
 
 To use this utility:
+
 Check the "Append patch name" box then the name of the patch will be added to the ROM file after patching
 
 Click the "Choose ROM" button to select the game to patch
