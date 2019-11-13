@@ -1,5 +1,6 @@
 # EWingIPSPatcher
 Graphical utility for Linux to apply IPS patches to ROMs
+This will not work on non-Linux operating systems
 
 To use this utility:
 
